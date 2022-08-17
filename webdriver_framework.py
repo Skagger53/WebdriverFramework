@@ -12,13 +12,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import datetime
+import os
 from datetime import timedelta
 from time import sleep
 
 # from bs4 import BeautifulSoup
 # import requests
-
-import os
 
 class WebdriverMain:
     def __init__(self):
@@ -37,7 +36,8 @@ class WebdriverMain:
             return False
 
     # Creates a new webdriver
-    # Run at initialization. Can be run any other time. Does not RE-start, only starts a new driver.
+    # Run at initialization. Can be run any other time.
+    # Does not RE-start, only starts a new driver.
     def new_driver(self):
         print("\nStarting webdriver...")
 
