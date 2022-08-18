@@ -265,14 +265,14 @@ class WebdriverMain:
     # Easy way to clear the console anytime.
     def clear_console(self): os.system("cls")
 
-    # Logs an exception and displays the provided error message to the user (requiring Enter press).
+    # Logs an exception and displays the provided error message to the user (requiring Enter press). Should be a string or a captured exception.
     def display_err_msg(self, error, fail_msg):
         self.check_types_to_raise_exc((error, fail_msg), (str, str), ("error", "fail_msg"))
 
         self.error_col.append((datetime.datetime.now(), error))
         input(fail_msg)
 
-    # Logs an error but does not inform the user. Does not have to be an exception.
+    # Logs an error but does not inform the user. Should be a string or a captured exception.
     def log_err_no_msg(self, error):
         if isinstance(error, str) == False: raise InvalidTypePassed(error, type(error), str)
 
