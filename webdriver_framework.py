@@ -301,7 +301,7 @@ class WebdriverMain:
 # If an invalid search_by is passed in (which sets up selenium.webdriver.common.by), this exception is raised.
 class InvalidSearchForElement(Exception):
     def __init__(self, search_by):
-        message = f"Argument {search_by} is not a valid argument to search for an element. Must use one of these (as string): 'id', 'name', 'xpath', 'link_text', 'partial_link_text', 'tag_name', 'class_name', 'css_selector'."
+        message = f"Your provided argument of '{search_by}' is not a valid argument to search for an element. Must use one of these (as string): 'id', 'name', 'xpath', 'link_text', 'partial_link_text', 'tag_name', 'class_name', 'css_selector'."
         super().__init__(message)
 
 # This exception is available for any method. This checks a variable type. An invalid type will raise this error.
