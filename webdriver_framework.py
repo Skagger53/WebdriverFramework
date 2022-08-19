@@ -175,26 +175,60 @@ class WebdriverMain:
             return False
 
     # ----------------------------USER INPUT VALIDATION METHODS----------------------------
-    # Validates user input to be a positive integer. Returns False is failed. Returns the user's input as string if succeeds. Returns "back" if the user typed "back". Allows user to exit program.
-    def validate_user_input_pos_int(self, user_input):
+    # Validates user input against any criteria for numbers.
+    # Set relevant parameters to False when calling this method to disallow those inputs (e.g., if you do NOT want to allow negative numbers, set negative_num = False). By default all rational numbers are allowed (all parameters are set to True).
+    # Allows user to go back (returns "back") and to exit.
+    # Returns False is failed. Returns the user's input as string if succeeds.
+    def validate_user_input_num(self, user_input, float_num = True, negative_num = True, zero_num = True, positive_num = True):
         if isinstance(user_input, (str, int, float)) == False: raise InvalidTypePassed("user_input", type(user_input), f"({str}, {int}, {float})")
 
+        # Checking if all criteria are set to False (nothing would pass this check)
+        if negative_num == False and zero_num == False and positive_num == False:
+            input("\nAll real numbers are excluded by this criteria.\n(Press Enter.)\n\n")
+            return False
+
+        # Invalid entry messages to user
+        invalid_num = "\nYour input must be a number.\n\n(Press Enter.)\n"
+        invalid_float_num = "\nYour input may not be a float. (Your input must be an integer).\n\n(Press Enter.)\n"
+        invalid_negative_num = "\nYour input may not be negative.\n\n(Press Enter.)\n"
+        invalid_zero_num = "\nYour input may not be zero.\n\n(Press Enter.)\n"
+        invalid_positive_num = "\nYour input may not be positive.\n\n(Press Enter.)\n"
+
         user_input = user_input.strip().lower()
+        orig_user_input = user_input
 
         if user_input == "": return False
 
         if user_input == "back": return "back"
         if user_input == "exit" or user_input == "close": self.close_out()
 
-        try:
-            test = int(user_input)
+        # Checking that user's input is a number
+        try: user_input = float(user_input)
         except ValueError:
-            print(self.validate_user_input_e_msg)
+            input(invalid_num)
             return False
-        else:
-            # Checks if input is a decimal or negative
-            if test != float(user_input) or test <= 0: return False
-            return str(test)
+
+        if float_num == False:
+            if user_input != int(user_input):
+                input(invalid_float_num)
+                return False
+
+        if negative_num == False:
+            if user_input < 0:
+                input(invalid_negative_num)
+                return False
+
+        if zero_num == False:
+            if user_input == 0:
+                input(invalid_zero_num)
+                return False
+
+        if positive_num == False:
+            if user_input > 0:
+                input(invalid_positive_num)
+                return False
+
+        return orig_user_input
 
     # Validates user input based on custom tuple in "acceptable" argument.
     # This does not loop; this should be called within a loop obtaining user's input.
@@ -282,16 +316,18 @@ class WebdriverMain:
     # types_to_compare is a list/tuple of all types (must use type here, not string)
     # vars_as_strings is a list/tuple of strings of all variables being evaluated. This list visually is identical to vars_to_check except each element is a string (is in quotation marks).
     def check_types_to_raise_exc(self, vars_to_check, types_to_compare, vars_as_strings):
-        # checks that the list lengths match (the lists will be zipped)
+        # Before validating the data types provided, method first validates that the lists/tuples are the same length and that they are in fact lists or tuples.
+        # Checks that the list lengths match (the lists will be zipped)
         if len(vars_to_check) != len(types_to_compare) or \
                 len(types_to_compare) != len(vars_as_strings):
-            raise InvalidListLength()
+            raise InvalidListLength((vars_to_check, types_to_compare, vars_as_strings))
 
+        # Checks that the arguments are lists or tuples
         validate_vars = zip((vars_to_check, types_to_compare, vars_as_strings), ("vars_to_check", "types_to_compare", "vars_as_strings"))
-
         for tup in validate_vars:
             if isinstance(tup[0], (list, tuple)) == False: raise InvalidTypePassed(tup[1], type(vars_to_check), (list, tuple))
 
+        # Checks that the variables (vars_to_check) match the types provided (types_to_compare). Failure raises an Exception and informs the user of the problematic variable.
         list_to_check = zip(vars_to_check, types_to_compare, vars_as_strings)
         for checks in list_to_check:
             if isinstance(checks[0], checks[1]) == False: raise InvalidTypePassed(checks[2], type(checks[0]), checks[1])
@@ -316,6 +352,7 @@ class InvalidTypePassed(Exception):
 
 # Exception if lists/tuples provided to a method have unmatched lengths when they must match (e.g., they will be zipped).
 class InvalidListLength(Exception):
-    def __init__(self):
-        message = "Lists/tuples have Unmatched lengths. Lengths must match."
+    def __init__(self, lists_tuples):
+        lists_tuples_to_user = ", ".join([l_t for l_t in lists_tuples])
+        message = f"These lists/tuples have unmatched lengths: {lists_tuples_to_user}. Lengths must match."
         super().__init__(message)
