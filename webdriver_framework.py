@@ -80,17 +80,18 @@ class WebdriverMain:
         finally: sys.exit()
 
     # ----------------------------WORKING WITH ELEMENTS METHODS----------------------------
-    # All the methods in this section work with elements (search, click, etc.) on the current webdriver's page.
+    # All the methods in this section work with elements (search, click, etc.)
+    # Webdriver remains in the window_handle provided as an argument when all methods end
     # Use fail_msg argument to generate failure messages in this format: f"Failed to find {fail_msg}."
     # Failure returns False.
 
     # Searching for elements
     # Required arguments:
-        # window_handle: handle of window to search within. This method does not switch back to another window at the end.
-        # search_by: By method to use ("id", "name", "xpath", "link_text", "partial_link_text", "tag_name", "class_name", "css_selector")
+        # window_handle: handle of window to search within. The driver's active window will remain this window at the end of the method.
+        # search_by: Determines the By method (selenium.webdriver.common.by) that will be used (accepted arguments: "id", "name", "xpath", "link_text", "partial_link_text", "tag_name", "class_name", "css_selector")
         # search_for: the string to search for
-        # wait_time: the amount of time in seconds to wait
-        # fail_msg: custom message to user upon a failure
+        # wait_time: the amount of time in seconds to wait (for WebDriverWait)
+        # fail_msg: custom message to user upon a failure (see above comments)
     # Success returns the found webdriver object. Failure returns False.
     def find_ele(self, window_handle, search_by, search_for, wait_time, fail_msg):
         self.check_types_to_raise_exc(
@@ -120,8 +121,7 @@ class WebdriverMain:
         except Exception as search_for_id_e:
             self.display_err_msg(search_for_id_e, f"\nFailed to find {fail_msg}.\n\nPress Enter to continue.\n")
             return False
-        else:
-            return element
+        else: return element
 
     # Attempts to click an element.
     # Parameter webd_ele is a webdriver object. Ideally use self.find_ele() to obtain the webdriver object and then pass that in.
@@ -175,11 +175,9 @@ class WebdriverMain:
             return False
 
     # ----------------------------USER INPUT VALIDATION METHODS----------------------------
-    # Validates user input to be a positive integer. Returns False is failed. Returns the user's input as string if succeeds. Allows user to go back and to exit.
+    # Validates user input to be a positive integer. Returns False is failed. Returns the user's input as string if succeeds. Returns "back" if the user typed "back". Allows user to exit program.
     def validate_user_input_pos_int(self, user_input):
         if isinstance(user_input, (str, int, float)) == False: raise InvalidTypePassed("user_input", type(user_input), f"({str}, {int}, {float})")
-
-        self.validate_user_input_e_msg = "\nPlease enter a positive integer."
 
         user_input = user_input.strip().lower()
 
@@ -194,21 +192,16 @@ class WebdriverMain:
             print(self.validate_user_input_e_msg)
             return False
         else:
-            if test != float(user_input) or test <= 0:
-                print(self.validate_user_input_e_msg)
-                return False
+            # Checks if input is a decimal or negative
+            if test != float(user_input) or test <= 0: return False
             return str(test)
 
     # Validates user input based on custom tuple in "acceptable" argument.
     # This does not loop; this should be called within a loop obtaining user's input.
-    # NOT case-sensitive.
-    # Does not require the user to press Enter.
-    # "invalid_msg" is a user-friendly text description of what is valid for the user to enter. See usage below.
+    # user_input is not case-sensitive. Elements in acceptable list/tuple are case-sensitive. (Ideally elements in acceptable should each be all lower case or all upper case.)
     # Returns False for a failed check. Returns "back" if user wants to go back. Returns stripped user's input if succeeded.
-    def validate_user_input_custom(self, user_input, acceptable, invalid_msg):
-        self.check_types_to_raise_exc((user_input, acceptable, invalid_msg), (str, (list, tuple), str), ("user_input", "acceptable", "invalid_msg"))
-
-        self.validate_user_input_cust_e_msg = f"\nPlease enter {invalid_msg}.\n" # Invalid input message to user
+    def validate_user_input_custom(self, user_input, acceptable):
+        self.check_types_to_raise_exc((user_input, acceptable), (str, (list, tuple), str), ("user_input", "acceptable"))
 
         user_input = user_input.strip()
         user_input_l = user_input.lower()
@@ -218,9 +211,8 @@ class WebdriverMain:
         if user_input_l == "back": return "back"
         if user_input_l == "exit" or user_input_l == "close": self.close_out()
 
-        if user_input.capitalize() in acceptable or user_input_l in acceptable: return user_input
+        if user_input in acceptable or user_input.capitalize() in acceptable or user_input_l in acceptable: return user_input
 
-        print(self.validate_user_input_cust_e_msg)
         return False
 
     # Validates user input as a date.
@@ -244,6 +236,7 @@ class WebdriverMain:
             (" " + str(datetime.datetime.now().year), "%B %d %Y"),
             (" " + str(datetime.datetime.now().year), "%b %d %Y")
         )
+
         # input_test is testing when the user enters a date including the year
         input_test = ("%m/%d/%Y", "%m/%d/%y", "%b %d %Y", "%b %d %y", "%B %d %Y", "%B %d %y")
 
@@ -256,7 +249,7 @@ class WebdriverMain:
         # Checks for instances when the user provided the full date
         for check in input_test:
             try: time_obj = datetime.datetime.strptime(user_input, check)
-            except:  pass
+            except: pass
             else: return time_obj
 
         return False
@@ -265,10 +258,11 @@ class WebdriverMain:
     # Easy way to clear the console anytime.
     def clear_console(self): os.system("cls")
 
-    # Logs an exception and displays the provided error message to the user (requiring Enter press). Should be a string or a captured exception.
+    # Logs an exception and displays the provided error message to the user (requiring Enter press). argument "error" should be a descriptive string or a captured exception.
+    # No exception checking on "error" argument. There is no good way to validate the possible Exceptions that may be passed (could even be a custom exception from this module or an imported module)
     def display_err_msg(self, error, fail_msg):
-        self.check_types_to_raise_exc((error, fail_msg), (str, str), ("error", "fail_msg"))
-
+        if isinstance(fail_msg, str) == False: raise InvalidTypePassed("fail_msg", type(fail_msg), str)
+        
         self.error_col.append((datetime.datetime.now(), error))
         input(fail_msg)
 
@@ -288,9 +282,15 @@ class WebdriverMain:
     # types_to_compare is a list/tuple of all types (must use type here, not string)
     # vars_as_strings is a list/tuple of strings of all variables being evaluated. This list visually is identical to vars_to_check except each element is a string (is in quotation marks).
     def check_types_to_raise_exc(self, vars_to_check, types_to_compare, vars_as_strings):
-        if isinstance(vars_to_check, (list, tuple)) == False: raise InvalidTypePassed(vars_to_check, type(vars_to_check), (list, tuple))
-        if isinstance(types_to_compare, (list, tuple)) == False: raise InvalidTypePassed(types_to_compare, type(types_to_compare), (list, tuple))
-        if isinstance(vars_as_strings, (list, tuple)) == False: raise InvalidTypePassed(vars_as_strings, type(vars_as_strings), (list, tuple))
+        # checks that the list lengths match (the lists will be zipped)
+        if len(vars_to_check) != len(types_to_compare) or \
+                len(types_to_compare) != len(vars_as_strings):
+            raise InvalidListLength()
+
+        validate_vars = zip((vars_to_check, types_to_compare, vars_as_strings), ("vars_to_check", "types_to_compare", "vars_as_strings"))
+
+        for tup in validate_vars:
+            if isinstance(tup[0], (list, tuple)) == False: raise InvalidTypePassed(tup[1], type(vars_to_check), (list, tuple))
 
         list_to_check = zip(vars_to_check, types_to_compare, vars_as_strings)
         for checks in list_to_check:
@@ -304,12 +304,18 @@ class InvalidSearchForElement(Exception):
         message = f"Your provided argument of '{search_by}' is not a valid argument to search for an element. Must use one of these (as string): 'id', 'name', 'xpath', 'link_text', 'partial_link_text', 'tag_name', 'class_name', 'css_selector'."
         super().__init__(message)
 
-# This exception is available for any method. This checks a variable type. An invalid type will raise this error.
-# To check multiple variables at once, use WedriverMain() method check_types_to_raise_exc(). This will loop and check each variable with the below class.
+# This exception is available for any method to check a variable type. An invalid type will raise this error.
+# To check multiple variables at once, use WedriverMain() method check_types_to_raise_exc(). That method loops and checks each variable with the below class.
 # relevant_variable is a string that can be printed to the user to identify which variable is invalid
-# type_passed is the actual type of the variable (valid or invalid). Use type() around the relevant variable for this.
+# type_passed is the actual type of the variable (valid or invalid). Use type() around the variable i question for this.
 # type_needed is the type itself that the code requires (e.g., just type "str" or "float" but without quotation marks)
 class InvalidTypePassed(Exception):
     def __init__(self, relevant_variable, type_passed, type_needed):
         message = f"Argument {relevant_variable} must be {type_needed}. Received {type_passed}."
+        super().__init__(message)
+
+# Exception if lists/tuples provided to a method have unmatched lengths when they must match (e.g., they will be zipped).
+class InvalidListLength(Exception):
+    def __init__(self):
+        message = "Lists/tuples have Unmatched lengths. Lengths must match."
         super().__init__(message)
