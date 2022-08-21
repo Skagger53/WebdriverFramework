@@ -3,7 +3,7 @@ import sys
 import selenium.webdriver.remote.webelement
 
 if __name__ == "__main__":
-    print("This is a supporting file. Do not execute.")
+    input("This is a supporting file. Do not execute.\n\nPress Enter to exit.")
     sys.exit()
 
 from selenium import webdriver
@@ -22,9 +22,15 @@ from time import sleep
 # import requests
 
 class WebdriverMain:
-    def __init__(self):
-        self.window_size = (1200, 900)
-        self.error_col = [] # Error collection
+    def __init__(self, window_x = 800, window_y = 600):
+        self.check_types_to_raise_exc((window_x, window_y), ((int, float), (int, float)), ("window_x", "window_y"))
+
+        self.window_size = (window_x, window_y) # Used to size window in new_driver().
+
+        # Error collection. Each error is a tuple with two elements: time stamp and the error itself (either a captured Exception or text passed to one of the error collecting methods).
+        self.error_col = []
+
+        # Starts a webdriver
         self.new_driver()
 
     # ----------------------------MAIN WEBDRIVER METHODS----------------------------
@@ -38,25 +44,35 @@ class WebdriverMain:
         try:
             self.driver.get(url)
         except Exception as get_url_e:
-            self.display_err_msg(get_url_e, f"Failed to reach desired URL:\n{url}\n\nTry restarting driver?\n\nPress Enter.\n")
+            self.display_err_msg(get_url_e, f"Failed to reach URL:\n{url}\n\nTry restarting driver?\n\nPress Enter.\n")
             return False
 
     # Creates a new webdriver
     # Run at initialization. Can be run any other time as well.
+    # Informs user of any errors (and logs).
     # Does not RE-start, only starts a new driver.
     def new_driver(self):
         print("\nStarting new webdriver...")
 
-        self.driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()))
+        try: self.driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()))
+        except Exception as new_driver_e:
+            self.display_err_msg(new_driver_e, "\nFailed to start a new driver. Try closing and reopening the program.\n\nPress Enter.\n")
+            return False
+        else:
+            self.driver.set_window_size(self.window_size[0], self.window_size[1])
+            self.main_win_handle = self.driver.current_window_handle
 
-        self.driver.set_window_size(self.window_size[0], self.window_size[1])
-        self.main_win_handle = self.driver.current_window_handle
+    # Stops the driver. Quietly logs any error. Does not start new driver.
+    def stop_driver(self):
+        try: self.driver.quit()
+        except Exception as stop_driver_e:
+            self.log_err_no_msg(stop_driver_e)
+            return False
 
     # Restarts driver. Attempts to close current driver and open a new one.
     def restart_driver(self):
-        try: self.driver.quit()
-        except: pass
-        finally: self.new_driver()
+        self.driver.quit()
+        self.new_driver()
 
     # If desired window handle is not the current window, attempts to switch
     # Failure will inform the user, log the error, and return False.
@@ -74,7 +90,6 @@ class WebdriverMain:
 
     # Easy way to close everything out.
     def close_out(self):
-        self.err_log_dump()
         try: self.driver.quit()
         except: pass
         finally: sys.exit()
@@ -119,7 +134,7 @@ class WebdriverMain:
         try:
             element = WebDriverWait(self.driver, wait_time).until(EC.presence_of_element_located((search_by, search_for)))
         except Exception as search_for_id_e:
-            self.display_err_msg(search_for_id_e, f"\nFailed to find {fail_msg}.\n\nPress Enter to continue.\n")
+            self.display_err_msg(search_for_id_e, f"\nFailed to find {fail_msg}\n\nPress Enter to continue.\n")
             return False
         else: return element
 
@@ -137,7 +152,7 @@ class WebdriverMain:
 
         try: webd_ele.click()
         except Exception as click_e:
-            self.display_err_msg(click_e, f"\nFailed to find {fail_msg}.\n\nPress Enter")
+            self.display_err_msg(click_e, f"\nFailed to find {fail_msg}\n\nPress Enter")
             return False
 
     # Attempts to enter text into an element
@@ -149,12 +164,12 @@ class WebdriverMain:
             ("window_handle", "webd_ele", "text_to_enter", "fail_msg")
         )
 
-        # Switches windows if necessary
+        # Switches windows if needed
         if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
 
         try: webd_ele.send_keys(text_to_enter)
         except Exception as enter_text_e:
-            self.display_err_msg(enter_text_e, f"Failed to enter text into {fail_msg}.\n\nPress Enter to continue.\n")
+            self.display_err_msg(enter_text_e, f"Failed to enter text into {fail_msg}\n\nPress Enter to continue.\n")
             return False
 
     # Attempts to press Enter on an element
@@ -171,7 +186,7 @@ class WebdriverMain:
 
         try: webd_ele.send_keys(Keys.ENTER)
         except Exception as press_enter_e:
-            self.display_err_msg(press_enter_e, f"\nFailed to press enter on {fail_msg}.\n\nPress Enter to continue.\n")
+            self.display_err_msg(press_enter_e, f"\nFailed to press enter on {fail_msg}\n\nPress Enter to continue.\n")
             return False
 
     # ----------------------------USER INPUT VALIDATION METHODS----------------------------
@@ -296,7 +311,7 @@ class WebdriverMain:
     # No exception checking on "error" argument. There is no good way to validate the possible Exceptions that may be passed (could even be a custom exception from this module or an imported module)
     def display_err_msg(self, error, fail_msg):
         if isinstance(fail_msg, str) == False: raise InvalidTypePassed("fail_msg", type(fail_msg), str)
-        
+
         self.error_col.append((datetime.datetime.now(), error))
         input(fail_msg)
 
@@ -305,10 +320,6 @@ class WebdriverMain:
         if isinstance(error, str) == False: raise InvalidTypePassed(error, type(error), str)
 
         self.error_col.append((datetime.datetime.now(), error))
-
-    # This can be used to write errors collected in self.error_col list of tuples
-    def err_log_dump(self):
-        pass
 
     # Checks numerous variables to ensure they are the correct type. Raises exception if type is incorrect.
     # All arguments MUST be lists/tuples, even if they have only one element. (Note that if checking just one element, just doing the check directly, without check_to_raise_exc(), and then directly callin InvalidTypePassed(), is better.)
@@ -332,7 +343,7 @@ class WebdriverMain:
         for checks in list_to_check:
             if isinstance(checks[0], checks[1]) == False: raise InvalidTypePassed(checks[2], type(checks[0]), checks[1])
 
-# ----------------------------EXCEPTIONS CLASS----------------------------
+# ----------------------------EXCEPTIONS CLASSES----------------------------
 # Only used for WebdriverMain() method find_ele().
 # If an invalid search_by is passed in (which sets up selenium.webdriver.common.by), this exception is raised.
 class InvalidSearchForElement(Exception):
