@@ -1,7 +1,7 @@
 # Webdriver_Framework
  CMD framework for creating code with Selenium Webdriver
 
-WebDriverMain class provides many useful methods for more easily and safely executing tasks like looking for elements, interacting with elements, managing windows, and more. Includes various data validation methods.
+WebDriverMain class provides many useful methods for more easily and safely executing tasks like looking for elements, interacting with elements, managing windows, and more.
 
 ------------------
 
