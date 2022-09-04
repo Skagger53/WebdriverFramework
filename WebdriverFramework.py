@@ -39,7 +39,13 @@ class WebdriverMain:
     def get_url(self, window_handle, url):
         if isinstance(url, str) == False: raise InvalidTypePassed("url", type(url), str)
 
-        if self.switch_window(self.main_win_handle, window_handle) == False: return False
+        # Switches windows if necessary
+        try:
+            if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # This exception occurs if a window has been closed and cannot be found. No need to log this error.
+        except selenium.common.exceptions.NoSuchWindowException:
+            # Tries to switch to the first window in self.driver.window_handles list. If false, returns False.
+            if self.no_window_err() == False: return False
 
         try:
             self.driver.get(url)
@@ -76,6 +82,7 @@ class WebdriverMain:
 
     # If desired window handle is not the current window, attempts to switch
     # Failure will inform the user, log the error, and return False.
+    # Does not affect self.main_win_handle
     def switch_window(self, curr_window_handle, new_window_handle):
         self.check_types_to_raise_exc((curr_window_handle, new_window_handle), (str, str), ("curr_window_handle", "new_window_handle"))
 
@@ -118,7 +125,12 @@ class WebdriverMain:
         if search_for == "": return False
 
         # Switches windows if necessary
-        if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        try:
+            if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # This exception occurs if a window has been closed and cannot be found. No need to log this error.
+        except selenium.common.exceptions.NoSuchWindowException:
+            # Tries to switch to the first window in self.driver.window_handles list. If false, returns False.
+            if self.no_window_err() == False: return False
 
         # Sets up proper type object to use for search below based on search_by argument
         match search_by:
@@ -148,11 +160,16 @@ class WebdriverMain:
         )
 
         # Switches windows if necessary
-        if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        try:
+            if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # This exception occurs if a window has been closed and cannot be found. No need to log this error.
+        except selenium.common.exceptions.NoSuchWindowException:
+            # Tries to switch to the first window in self.driver.window_handles list. If false, returns False.
+            if self.no_window_err() == False: return False
 
         try: webd_ele.click()
         except Exception as click_e:
-            self.display_err_msg(click_e, f"\nFailed to find {fail_msg}\n\nPress Enter")
+            self.display_err_msg(click_e, f"\nFailed to click {fail_msg}\n\nPress Enter")
             return False
 
     # Attempts to enter text into an element
@@ -164,8 +181,13 @@ class WebdriverMain:
             ("window_handle", "webd_ele", "text_to_enter", "fail_msg")
         )
 
-        # Switches windows if needed
-        if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # Switches windows if necessary
+        try:
+            if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # This exception occurs if a window has been closed and cannot be found. No need to log this error.
+        except selenium.common.exceptions.NoSuchWindowException:
+            # Tries to switch to the first window in self.driver.window_handles list. If false, returns False.
+            if self.no_window_err() == False: return False
 
         try: webd_ele.send_keys(text_to_enter)
         except Exception as enter_text_e:
@@ -182,7 +204,12 @@ class WebdriverMain:
         )
 
         # Switches windows if necessary
-        if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        try:
+            if self.switch_window(self.driver.current_window_handle, window_handle) == False: return False
+        # This exception occurs if a window has been closed and cannot be found. No need to log this error.
+        except selenium.common.exceptions.NoSuchWindowException:
+            # Tries to switch to the first window in self.driver.window_handles list. If false, returns False.
+            if self.no_window_err() == False: return False
 
         try: webd_ele.send_keys(Keys.ENTER)
         except Exception as press_enter_e:
@@ -206,6 +233,14 @@ class WebdriverMain:
         if isinstance(error, str) == False: raise InvalidTypePassed(error, type(error), str)
 
         self.error_col.append((datetime.datetime.now(), error))
+
+    # Called if first attempt to switch windows fails. This attempts to switch to the first window in self.driver.window_handles. If this fails, there should be no windows open (requiring a new webdriver).find
+    def no_window_err(self):
+        try:
+            self.driver.switch_to.window(self.driver.window_handles[0])
+        except Exception as switch_to_0_win_e:
+            self.display_err_msg(switch_to_0_win_e, "Failed to switch to any window. Start new webdriver?")
+            return False
 
     # Checks numerous variables to ensure they are the correct type. Raises exception if type is incorrect.
     # All arguments MUST be lists/tuples, even if they have only one element. (Note that if checking just one element, just doing the check directly, without check_to_raise_exc(), and then directly callin InvalidTypePassed(), is better.)
