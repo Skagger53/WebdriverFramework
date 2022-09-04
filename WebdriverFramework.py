@@ -13,6 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import selenium.common # Used for error detection when switching windows within methods
 import datetime
 import os
 from datetime import timedelta
@@ -217,20 +218,20 @@ class WebdriverMain:
             return False
 
     # One method to find an element and then click it
-    def find_click(self, window_handle, search_by, search_for, webd_ele, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, wait_time = wait_time)
+    def find_click(self, window_handle, search_by, search_for, fail_msg, wait_time = 5):
+        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
         if found_ele == False: return # If not found, doesn't try to click.
         self.click_ele(window_handle, found_ele, fail_msg)
 
     # One method to find an element and enter text into it
-    def find_enter_text(self, window_handle, search_by, search_for, webd_ele, text_to_enter, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, wait_time = wait_time)
+    def find_enter_text(self, window_handle, search_by, search_for, text_to_enter, fail_msg, wait_time = 5):
+        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
         if found_ele == False: return # If not found, doesn't try to enter text.
         self.enter_text_ele(window_handle, found_ele, text_to_enter, fail_msg)
 
     # One method to find an element, enter text, and then press Enter
-    def find_enter_text_enter(self, window_handle, search_by, search_for, webd_ele, text_to_enter, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, wait_time = wait_time)
+    def find_enter_text_enter(self, window_handle, search_by, search_for, text_to_enter, fail_msg, wait_time = 5):
+        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
         if found_ele == False: return # If not found, doesn't try to enter text.
         # If enter text fails, doesn't try to press Enter.
         if self.enter_text_ele(window_handle, found_ele, text_to_enter, fail_msg) == False: return
