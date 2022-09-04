@@ -16,15 +16,19 @@ from selenium.webdriver.support import expected_conditions as EC
 import selenium.common # Used for error detection when switching windows within methods
 import datetime
 import os
-from datetime import timedelta
-from time import sleep
 
+# from datetime import timedelta
+# from time import sleep
 # from bs4 import BeautifulSoup
 # import requests
 
 class WebdriverMain:
     def __init__(self, window_x = 800, window_y = 600):
-        self.check_types_to_raise_exc((window_x, window_y), ((int, float), (int, float)), ("window_x", "window_y"))
+        self.check_types_to_raise_exc(
+            (window_x, window_y),
+            ((int, float), (int, float)),
+            ("window_x", "window_y")
+        )
 
         self.window_size = (window_x, window_y) # Used to size window in new_driver().
 
@@ -63,7 +67,10 @@ class WebdriverMain:
 
         try: self.driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()))
         except Exception as new_driver_e:
-            self.display_err_msg(new_driver_e, "\nFailed to start a new driver. Try closing and reopening the program.\n\nPress Enter.\n")
+            self.display_err_msg(
+                new_driver_e,
+                "\nFailed to start a new driver. Try closing and reopening the program.\n\nPress Enter.\n"
+            )
             return False
         else:
             self.driver.set_window_size(self.window_size[0], self.window_size[1])
@@ -85,7 +92,11 @@ class WebdriverMain:
     # Failure will inform the user, log the error, and return False.
     # Does not affect self.main_win_handle
     def switch_window(self, curr_window_handle, new_window_handle):
-        self.check_types_to_raise_exc((curr_window_handle, new_window_handle), (str, str), ("curr_window_handle", "new_window_handle"))
+        self.check_types_to_raise_exc(
+            (curr_window_handle, new_window_handle),
+            (str, str),
+            ("curr_window_handle", "new_window_handle")
+        )
 
         # If the user's active window is the window they're trying to switch to, no action taken
         if curr_window_handle == new_window_handle: return
@@ -109,14 +120,20 @@ class WebdriverMain:
     # Failure returns False.
 
     # Searching for elements
-    # Required arguments:
+    # Arguments:
         # window_handle: handle of window to search within. The driver's active window will remain this window at the end of the method.
         # search_by: Determines the By method (selenium.webdriver.common.by) that will be used (accepted arguments: "id", "name", "xpath", "link_text", "partial_link_text", "tag_name", "class_name", "css_selector")
         # search_for: the string to search for
         # fail_msg: custom message to user upon a failure (see above comments)
         # wait_time: optional parameter. The amount of time in seconds to wait (for WebDriverWait). Default = 5.
     # Success returns the found webdriver object. Failure returns False.
-    def find_ele(self, window_handle, search_by, search_for, fail_msg, wait_time = 5):
+    def find_ele(self,
+            window_handle,
+            search_by,
+            search_for,
+            fail_msg,
+            wait_time = 5
+    ):
         self.check_types_to_raise_exc(
             (window_handle, search_by, search_for, wait_time, fail_msg),
             (str, str, str, (float, int), str),
@@ -147,7 +164,10 @@ class WebdriverMain:
         try:
             element = WebDriverWait(self.driver, wait_time).until(EC.presence_of_element_located((search_by, search_for)))
         except Exception as search_for_id_e:
-            self.display_err_msg(search_for_id_e, f"\nFailed to find {fail_msg}\n\nPress Enter to continue.\n")
+            self.display_err_msg(
+                search_for_id_e,
+                f"\nFailed to find {fail_msg}\n\nPress Enter to continue.\n"
+            )
             return False
         else: return element
 
@@ -175,7 +195,12 @@ class WebdriverMain:
 
     # Attempts to enter text into an element
     # Paremeter webd_ele is a webdriver element.
-    def enter_text_ele(self, window_handle, webd_ele, text_to_enter, fail_msg):
+    def enter_text_ele(self,
+            window_handle,
+            webd_ele,
+            text_to_enter,
+            fail_msg
+    ):
         self.check_types_to_raise_exc(
             (window_handle, webd_ele, text_to_enter, fail_msg),
             (str, selenium.webdriver.remote.webelement.WebElement, str, str),
@@ -197,7 +222,11 @@ class WebdriverMain:
 
     # Attempts to press Enter on an element
     # Paremeter webd_ele is a webdriver element.
-    def press_enter_ele(self, window_handle, webd_ele, fail_msg):
+    def press_enter_ele(self,
+        window_handle,
+        webd_ele,
+        fail_msg
+    ):
         self.check_types_to_raise_exc(
             (window_handle, webd_ele, fail_msg),
             (str, selenium.webdriver.remote.webelement.WebElement, str),
@@ -218,23 +247,71 @@ class WebdriverMain:
             return False
 
     # One method to find an element and then click it
-    def find_click(self, window_handle, search_by, search_for, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
+    def find_click(self,
+       window_handle,
+       search_by,
+       search_for,
+       fail_msg,
+       wait_time = 5
+    ):
+        found_ele = self.find_ele(
+            window_handle,
+            search_by,
+            search_for,
+            fail_msg,
+            wait_time = wait_time
+        )
         if found_ele == False: return # If not found, doesn't try to click.
         self.click_ele(window_handle, found_ele, fail_msg)
 
     # One method to find an element and enter text into it
-    def find_enter_text(self, window_handle, search_by, search_for, text_to_enter, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
+    def find_enter_text(self,
+            window_handle,
+            search_by,
+            search_for,
+            text_to_enter,
+            fail_msg,
+            wait_time = 5
+    ):
+        found_ele = self.find_ele(
+            window_handle,
+            search_by,
+            search_for,
+            fail_msg,
+            wait_time = wait_time
+        )
         if found_ele == False: return # If not found, doesn't try to enter text.
-        self.enter_text_ele(window_handle, found_ele, text_to_enter, fail_msg)
+        self.enter_text_ele(
+            window_handle,
+            found_ele,
+            text_to_enter,
+            fail_msg
+        )
 
     # One method to find an element, enter text, and then press Enter
-    def find_enter_text_enter(self, window_handle, search_by, search_for, text_to_enter, fail_msg, wait_time = 5):
-        found_ele = self.find_ele(window_handle, search_by, search_for, fail_msg, wait_time = wait_time)
+    def find_enter_text_enter(self,
+            window_handle,
+            search_by,
+            search_for,
+            text_to_enter,
+            fail_msg,
+            wait_time = 5
+    ):
+        found_ele = self.find_ele(
+            window_handle,
+            search_by,
+            search_for,
+            fail_msg,
+            wait_time = wait_time
+        )
         if found_ele == False: return # If not found, doesn't try to enter text.
         # If enter text fails, doesn't try to press Enter.
-        if self.enter_text_ele(window_handle, found_ele, text_to_enter, fail_msg) == False: return
+        if self.enter_text_ele(
+                window_handle,
+                found_ele,
+                text_to_enter,
+                fail_msg
+        ) == False: return
         self.press_enter_ele(window_handle, found_ele, fail_msg)
 
     # ----------------------------MISC METHODS----------------------------
