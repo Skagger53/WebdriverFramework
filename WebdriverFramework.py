@@ -98,8 +98,8 @@ class WebdriverMain:
     # Easy way to close everything out.
     def close_out(self):
         try: self.driver.quit()
-        except: pass
-        finally: sys.exit()
+        except Exception as close_out_e:
+            self.display_err_msg(close_out_e, "Failed to close out webdriver. Try closing manually.")
 
     # ----------------------------WORKING WITH ELEMENTS METHODS----------------------------
     # All the methods in this section work with elements (search, click, etc.)
