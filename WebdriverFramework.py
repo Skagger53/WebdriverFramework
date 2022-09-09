@@ -154,7 +154,7 @@ class WebdriverMain:
         match search_by:
             case "id": search_by = By.ID
             case "xpath": search_by = By.XPATH
-            case "link_text": search_by = By.XPATH
+            case "link_text": search_by = By.LINK_TEXT
             case "partial_link_text": search_by = By.PARTIAL_LINK_TEXT
             case "tag_name": search_by = By.TAG_NAME
             case "class_name": search_by = By.CLASS_NAME
