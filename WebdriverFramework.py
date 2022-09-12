@@ -41,7 +41,7 @@ class WebdriverMain:
     # ----------------------------MAIN WEBDRIVER METHODS----------------------------
     # Attempts to reach provided url.
     # If fails, logs the error, informs user, recommends starting a new driver, and returns False.
-    def get_url(self, window_handle, url):
+    def get_url(self, window_handle, url, fail_msg="Try restarting driver?\n\nPress Enter.\n"):
         if isinstance(url, str) == False: raise InvalidTypePassed("url", type(url), str)
 
         # Switches windows if necessary
@@ -55,7 +55,7 @@ class WebdriverMain:
         try:
             self.driver.get(url)
         except Exception as get_url_e:
-            self.display_err_msg(get_url_e, f"Failed to reach URL:\n{url}\n\nTry restarting driver?\n\nPress Enter.\n")
+            self.display_err_msg(get_url_e, f"Failed to reach URL:\n{url}\n\n{fail_msg}")
             return False
 
     # Creates a new webdriver
