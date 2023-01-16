@@ -132,7 +132,8 @@ class WebdriverMain:
             search_by,
             search_for,
             fail_msg,
-            wait_time = 5
+            wait_time = 5,
+            multiple = False
     ):
         self.check_types_to_raise_exc(
             (window_handle, search_by, search_for, wait_time, fail_msg),
@@ -161,15 +162,30 @@ class WebdriverMain:
             case "css_selector": search_by = By.CSS_SELECTOR
             case other: raise InvalidSearchForElement(search_by)
 
+        # Looks for at least one element
         try:
-            element = WebDriverWait(self.driver, wait_time).until(EC.presence_of_element_located((search_by, search_for)))
+            element = WebDriverWait(self.driver, wait_time).\
+                until(
+                EC.presence_of_element_located((search_by, search_for))
+                )
         except Exception as search_for_id_e:
             self.display_err_msg(
                 search_for_id_e,
                 f"\nFailed to find {fail_msg}\n\nPress Enter to continue.\n"
             )
             return False
-        else: return element
+
+        # If only looking for one element, returns it
+        if multiple == False: return element
+
+        # If looking for multiple elements, returns a list of all found elements
+        try: elements = self.driver.find_elements(search_by, search_for)
+        except Exception as search_for_id_e:
+            self.display_err_msg(
+                search_for_id_e,
+                f"\nFailed to find {fail_msg}\n\nPress Enter to continue.\n"
+            )
+            return False
 
     # Attempts to click an element.
     # Parameter webd_ele is a webdriver object. Ideally use self.find_ele() to obtain the webdriver object and then pass that in.
