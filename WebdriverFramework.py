@@ -23,11 +23,11 @@ import os
 # import requests
 
 class WebdriverMain:
-    def __init__(self, window_x = 800, window_y = 600):
+    def __init__(self, window_x = 800, window_y = 600, suppress_notifications = False):
         self.check_types_to_raise_exc(
             (window_x, window_y),
             ((int, float), (int, float)),
-            ("window_x", "window_y")
+            ("window_x", "window_y"),
         )
 
         self.window_size = (window_x, window_y) # Used to size window in new_driver().
@@ -38,11 +38,14 @@ class WebdriverMain:
         # Starts a webdriver
         self.new_driver()
 
+        # Suppresses notifications if True
+        self.suppress_notifications = suppress_notifications
+
     # ----------------------------MAIN WEBDRIVER METHODS----------------------------
     # Attempts to reach provided url.
     # If fails, logs the error, informs user, recommends starting a new driver, and returns False.
     def get_url(self, window_handle, url, fail_msg="Try restarting driver?\n\nPress Enter.\n"):
-        if isinstance(url, str) == False: raise InvalidTypePassed("url", type(url), str)
+        if isinstance(url, str) == False and self.suppress_notifications == False: raise InvalidTypePassed("url", type(url), str)
 
         # Switches windows if necessary
         try:
@@ -337,14 +340,14 @@ class WebdriverMain:
     # Logs an exception and displays the provided error message to the user (requiring Enter press). argument "error" should be a descriptive string or a captured exception.
     # No exception checking on "error" argument. There is no good way to validate the possible Exceptions that may be passed (could even be a custom exception from this module or an imported module)
     def display_err_msg(self, error, fail_msg):
-        if isinstance(fail_msg, str) == False: raise InvalidTypePassed("fail_msg", type(fail_msg), str)
+        if isinstance(fail_msg, str) == False and self.suppress_notifications == False: raise InvalidTypePassed("fail_msg", type(fail_msg), str)
 
         self.error_col.append((datetime.datetime.now(), error))
-        input(fail_msg)
+        if self.suppress_notifications == False: input(fail_msg)
 
     # Logs an error but does not inform the user. Should be a string or a captured exception.
     def log_err_no_msg(self, error):
-        if isinstance(error, str) == False: raise InvalidTypePassed(error, type(error), str)
+        if isinstance(error, str) == False and self.suppress_notifications == False: raise InvalidTypePassed(error, type(error), str)
 
         self.error_col.append((datetime.datetime.now(), error))
 
@@ -353,7 +356,8 @@ class WebdriverMain:
         try:
             self.driver.switch_to.window(self.driver.window_handles[0])
         except Exception as switch_to_0_win_e:
-            self.display_err_msg(switch_to_0_win_e, "Failed to switch to any window. Start new webdriver?")
+            if self.suppress_notifications == False:
+                self.display_err_msg(switch_to_0_win_e, "Failed to switch to any window. Start new webdriver?")
             return False
 
     # Checks numerous variables to ensure they are the correct type. Raises exception if type is incorrect.
@@ -371,12 +375,12 @@ class WebdriverMain:
         # Checks that the arguments are lists or tuples
         validate_vars = zip((vars_to_check, types_to_compare, vars_as_strings), ("vars_to_check", "types_to_compare", "vars_as_strings"))
         for tup in validate_vars:
-            if isinstance(tup[0], (list, tuple)) == False: raise InvalidTypePassed(tup[1], type(vars_to_check), (list, tuple))
+            if isinstance(tup[0], (list, tuple)) == False and self.suppress_notifications == False: raise InvalidTypePassed(tup[1], type(vars_to_check), (list, tuple))
 
         # Checks that the variables (vars_to_check) match the types provided (types_to_compare). Failure raises an Exception and informs the user of the problematic variable.
         list_to_check = zip(vars_to_check, types_to_compare, vars_as_strings)
         for checks in list_to_check:
-            if isinstance(checks[0], checks[1]) == False: raise InvalidTypePassed(checks[2], type(checks[0]), checks[1])
+            if isinstance(checks[0], checks[1]) == False and self.suppress_notifications == False: raise InvalidTypePassed(checks[2], type(checks[0]), checks[1])
 
 # ----------------------------EXCEPTIONS CLASSES----------------------------
 # Only used for WebdriverMain() method find_ele().
